@@ -132,13 +132,11 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 이 useEffect는 클라이언트(브라우저) 환경에서만 실행되도록 명시적으로 확인합니다.
-    // Vercel 빌드 시 서버에서 useSearchParams 관련 오류를 방지하기 위함입니다.
-    if (typeof window === 'undefined') {
+    // searchParams가 null이 아닌 경우에만 로직을 실행합니다.
+    // 이는 서버 측 렌더링(SSR) 시 searchParams가 null일 수 있기 때문에 안전하게 처리합니다.
+    if (!searchParams) {
       setLoading(false);
-      // 서버 측 렌더링 시에는 초기 로딩 상태를 설정하고, 클라이언트에서 다시 데이터를 가져오도록 합니다.
-      // 이 메시지는 실제 사용자에게 표시되지 않고 빌드 시점에만 영향을 줄 수 있습니다.
-      // setError("결과를 준비 중입니다..."); // 선택 사항: 서버에서 보일 초기 메시지
+      setError("클라이언트 환경에서 URL 파라미터를 불러오는 데 실패했습니다.");
       return;
     }
 
