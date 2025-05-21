@@ -14,6 +14,18 @@ import styles from './results.module.css'; // 현재 폴더의 CSS 모듈 임포
 // 여기서는 mokaData.ts에서 가져온다고 가정합니다.
 // import { MokaQuestion } from '../../data/mokaData'; // 필요시 임포트
 
+// 각 차원의 두 극과 해당 극의 설명을 정의합니다. (calculateMokaResults 함수 밖으로 이동)
+const dichotomies = [
+    { name: 'EI', poles: ['E', 'I'], type: 'MBTI' },
+    { name: 'SN', poles: ['S', 'N'], type: 'MBTI' },
+    { name: 'TF', poles: ['T', 'F'], type: 'MBTI' },
+    { name: 'JP', poles: ['J', 'P'], type: 'MBTI' },
+    { name: 'MB', poles: ['M', 'B'], type: 'MOKA' }, // H/M -> M/B
+    { name: 'OU', poles: ['O', 'U'], type: 'MOKA' },
+    { name: 'KR', poles: ['K', 'R'], type: 'MOKA' },
+    { name: 'AY', poles: ['A', 'Y'], type: 'MOKA' },
+];
+
 // MOKA 테스트 결과 계산 및 유형 판별 함수
 // 이 함수는 test/page.tsx에서 넘겨받은 각 극의 총점(scores)을 기반으로
 // 최종 MBTI 4가지 지표와 MOKA 4가지 지표의 최종 유형 및 각 지표별 선호도 퍼센티지(선호도 강도)를 계산합니다.
@@ -32,24 +44,10 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
     descriptions: {},
   };
 
-  // 각 차원의 두 극과 해당 극의 설명을 정의합니다.
-  // 'H'와 'M' 대신 'M'과 'B'를 사용합니다.
-  const dichotomies = [
-    { name: 'EI', poles: ['E', 'I'], type: 'MBTI' },
-    { name: 'SN', poles: ['S', 'N'], type: 'MBTI' },
-    { name: 'TF', poles: ['T', 'F'], type: 'MBTI' },
-    { name: 'JP', poles: ['J', 'P'], type: 'MBTI' },
-    { name: 'MB', poles: ['M', 'B'], type: 'MOKA' }, // H/M -> M/B
-    { name: 'OU', poles: ['O', 'U'], type: 'MOKA' },
-    { name: 'KR', poles: ['K', 'R'], type: 'MOKA' },
-    { name: 'AY', poles: ['A', 'Y'], type: 'MOKA' },
-  ];
-
-  // 'let' 대신 'const'를 사용하여 ESLint 오류 해결
   const mbtiChars: string[] = [];
   const mokaChars: string[] = [];
 
-  dichotomies.forEach(dichotomy => {
+  dichotomies.forEach(dichotomy => { // dichotomies를 함수 밖에서 참조
     const [pole1, pole2] = dichotomy.poles;
     const score1 = rawScores[pole1] || 0;
     const score2 = rawScores[pole2] || 0;
@@ -118,7 +116,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
 
   results.descriptions.AY = results.percentages.AY.pole === 'A'
     ? "당신은 **자신감형(A)** 사람으로, 자신의 외모, 성격, 이미지에 전반적으로 만족하며 당당하고 매력적인 태도를 가집니다. 사회적 상황에서 긴장하지 않고 자신감 있게 행동하며, 타인의 관심을 즐기고 트렌드에 민감합니다. 주변 분위기를 변화시키는 존재감을 가집니다."
-    : "당신은 **불안형(Y)** 사람으로, 자신의 외모나 이미지에 대해 다소 불안감을 느끼거나 만족도가 낮을 수 있습니다. 주목받는 것을 어색해하며, 스스로를 매력적으로 포장하는 데 익숙하지 않습니다. 때로는 주변 사람들과 비교하며 위축되거나, 시대에 뒤처지는 느낌을 받을 수 있습니다.";
+    : "당신은 **불안형(Y)** 사람으로, 자신의 외모나 이미지에 대해 다소 불안감을 느끼거나 만족도가 낮을 수 있습니다. 주목받는 것을 어색해하며, 스스로를 매력적으로 포장하는 데 익숙하지 않습니다. 때로는 주변 사람들과 비교하며 위축되거나, 시대에 뒤처지는 느낌을 받을 수.";
 
   return results;
 };
@@ -126,55 +124,54 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
 
 // 결과 페이지 컴포넌트 정의
 export default function ResultsPage() {
-  // URL에서 쿼리 파라미터(예: ?scores=...)를 읽어오기 위한 훅
   const searchParams = useSearchParams();
-  // 페이지 이동을 위한 훅
   const router = useRouter();
 
-  // 상태 변수 선언
   const [mokaResults, setMokaResults] = useState<ReturnType<typeof calculateMokaResults> | null>(null);
-  // 데이터 로딩 상태
   const [loading, setLoading] = useState(true);
-  // 오류 메시지 상태
   const [error, setError] = useState<string | null>(null);
 
-  // 컴포넌트가 처음 화면에 표시될 때(마운트) 실행됩니다.
-  // URL 쿼리 파라미터에서 'scores' 값을 읽어와 점수 상태를 업데이트합니다.
   useEffect(() => {
-    const scoresParam = searchParams.get('scores'); // URL에서 'scores' 라는 이름의 파라미터 값을 가져옴
+    // 이 useEffect는 클라이언트(브라우저) 환경에서만 실행되도록 명시적으로 확인합니다.
+    // Vercel 빌드 시 서버에서 useSearchParams 관련 오류를 방지하기 위함입니다.
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      // 서버 측 렌더링 시에는 초기 로딩 상태를 설정하고, 클라이언트에서 다시 데이터를 가져오도록 합니다.
+      // 이 메시지는 실제 사용자에게 표시되지 않고 빌드 시점에만 영향을 줄 수 있습니다.
+      // setError("결과를 준비 중입니다..."); // 선택 사항: 서버에서 보일 초기 메시지
+      return;
+    }
 
-    if (scoresParam) {
+    const scoresParam = searchParams.get('scores');
+
+    if (scoresParam && scoresParam.length > 0) { // scoresParam이 존재하고 비어있지 않은 문자열인지 확인
       try {
-        // 가져온 파라미터 값(JSON 문자열)을 JavaScript 객체로 변환(파싱)
-        const parsedScores = JSON.parse(decodeURIComponent(scoresParam)); // decodeURIComponent 추가
-        const calculatedResults = calculateMokaResults(parsedScores); // 점수 계산 함수 호출
-        setMokaResults(calculatedResults); // 계산된 결과 객체를 상태에 저장
-        setLoading(false); // 로딩 상태를 false로 변경
+        const decodedScores = decodeURIComponent(scoresParam);
+        const parsedScores = JSON.parse(decodedScores);
+        const calculatedResults = calculateMokaResults(parsedScores);
+        setMokaResults(calculatedResults);
+        setLoading(false);
       } catch (e) {
-        console.error("Failed to parse or calculate scores from URL:", e); // 파싱 오류 발생 시 콘솔에 로그
-        setError("결과 데이터를 불러오거나 계산하는 데 실패했습니다. 데이터 형식이 올바르지 않습니다."); // 사용자에게 보여줄 오류 메시지 설정
-        setLoading(false); // 로딩 상태를 false로 변경 (오류 발생 시에도 로딩은 끝남)
+        console.error("Failed to parse or calculate scores from URL:", e);
+        setError("결과 데이터를 불러오거나 계산하는 데 실패했습니다. 데이터 형식이 올바르지 않습니다.");
+        setLoading(false);
       }
     } else {
-      // 'scores' 파라미터가 URL에 없는 경우
-      setError("결과 데이터가 URL에 없습니다. 테스트를 다시 시도해주세요."); // 데이터가 없다는 오류 메시지 설정
-      setLoading(false); // 로딩 상태를 false로 변경
+      setError("테스트 결과 데이터가 없습니다. 테스트를 다시 시도해주세요.");
+      setLoading(false);
     }
-  }, [searchParams]); // searchParams 객체가 변경될 때마다 이 useEffect 훅 안의 코드를 다시 실행
+  }, [searchParams, router]); // searchParams와 router를 의존성 배열에 포함
 
-  // 홈 페이지('/')로 이동하는 함수
   const goToHome = useCallback(() => {
-    router.push('/'); // Next.js 라우터를 사용하여 루트 경로('/')로 이동
+    router.push('/');
   }, [router]);
 
 
-  // ***** 로딩 중 UI 표시 *****
   if (loading) {
     return (
-      <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
+      <div className={styles.container}>
         <h1>결과 로딩 중...</h1>
         <p>잠시만 기다려 주세요.</p>
-        {/* 로딩 중에도 홈 버튼을 표시하여 사용자가 페이지를 벗어날 수 있게 함 */}
         <button className={styles.homeButton} onClick={goToHome}>
             처음으로 돌아가기
         </button>
@@ -182,13 +179,11 @@ export default function ResultsPage() {
     );
   }
 
-  // ***** 오류 발생 시 UI 표시 *****
   if (error) {
     return (
-      <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
+      <div className={styles.container}>
         <h1>오류 발생</h1>
-        <p>{error}</p> {/* 오류 메시지 표시 */}
-        {/* 오류 발생 시에도 홈 버튼 제공 */}
+        <p>{error}</p>
         <button className={styles.homeButton} onClick={goToHome}>
           처음으로 돌아가기
         </button>
@@ -196,10 +191,8 @@ export default function ResultsPage() {
     );
   }
 
-  // ***** 결과 표시 UI (점수 데이터가 성공적으로 로드된 경우) *****
-  // mokaResults 상태가 null이 아니고 오류도 없을 때 이 부분이 렌더링됩니다.
   return (
-    <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
+    <div className={styles.container}>
       {/* 1. 제일 위쪽에 검은색 중간크기 글씨로 "My MBTI-MOKA Type?" */}
       <h2 className={styles.subtitle}>My MBTI-MOKA Type?</h2>
 
