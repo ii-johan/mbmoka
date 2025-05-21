@@ -124,6 +124,8 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
 
 // 결과 페이지 컴포넌트 정의
 export default function ResultsPage() {
+  // isClient 상태를 추가하여 클라이언트 환경에서만 특정 로직이 실행되도록 합니다.
+  const [isClient, setIsClient] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -131,13 +133,15 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 컴포넌트가 마운트될 때 isClient를 true로 설정하여 클라이언트 환경임을 나타냅니다.
   useEffect(() => {
-    // searchParams가 null이 아닌 경우에만 로직을 실행합니다.
-    // 이는 서버 측 렌더링(SSR) 시 searchParams가 null일 수 있기 때문에 안전하게 처리합니다.
-    if (!searchParams) {
-      setLoading(false);
-      setError("클라이언트 환경에서 URL 파라미터를 불러오는 데 실패했습니다.");
-      return;
+    setIsClient(true);
+  }, []);
+
+  // isClient가 true일 때만 searchParams를 사용하여 데이터를 로드합니다.
+  useEffect(() => {
+    if (!isClient) {
+      return; // 클라이언트 환경이 아니면 실행하지 않음
     }
 
     const scoresParam = searchParams.get('scores');
@@ -158,7 +162,7 @@ export default function ResultsPage() {
       setError("테스트 결과 데이터가 없습니다. 테스트를 다시 시도해주세요.");
       setLoading(false);
     }
-  }, [searchParams, router]); // searchParams와 router를 의존성 배열에 포함
+  }, [isClient, searchParams, router]); // isClient, searchParams, router를 의존성 배열에 포함
 
   const goToHome = useCallback(() => {
     router.push('/');
