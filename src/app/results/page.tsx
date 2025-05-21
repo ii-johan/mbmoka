@@ -4,15 +4,11 @@
 
 // 이 페이지는 URL 쿼리 파라미터에 의존하므로, 빌드 시점에 미리 렌더링하지 않고
 // 요청이 들어올 때마다 서버에서 동적으로 렌더링하도록 강제합니다.
-export const dynamic = 'force-dynamic'; // <-- 이 줄을 추가했습니다.
+export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState, useCallback } from 'react'; // 필요한 훅 임포트
 import { useSearchParams, useRouter } from 'next/navigation'; // App Router 훅 임포트 (URL 파라미터 읽기, 페이지 이동)
 import styles from './results.module.css'; // 현재 폴더의 CSS 모듈 임포트
-
-// MokaQuestion 타입 정의 (mokaData.ts에서 임포트하거나 여기에 직접 정의해야 할 수 있습니다.)
-// 여기서는 mokaData.ts에서 가져온다고 가정합니다.
-// import { MokaQuestion } from '../../data/mokaData'; // 필요시 임포트
 
 // 각 차원의 두 극과 해당 극의 설명을 정의합니다. (calculateMokaResults 함수 밖으로 이동)
 const dichotomies = [
@@ -47,7 +43,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
   const mbtiChars: string[] = [];
   const mokaChars: string[] = [];
 
-  dichotomies.forEach(dichotomy => { // dichotomies를 함수 밖에서 참조
+  dichotomies.forEach(dichotomy => {
     const [pole1, pole2] = dichotomy.poles;
     const score1 = rawScores[pole1] || 0;
     const score2 = rawScores[pole2] || 0;
@@ -58,8 +54,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
     const totalScore = score1 + score2;
 
     if (totalScore === 0) {
-      // 두 극 모두 점수가 0인 경우 (해당 문항이 없거나 답변이 없는 경우)
-      dominantPole = pole1; // 기본값으로 첫 번째 극 선택
+      dominantPole = pole1; // 점수가 0인 경우 기본값으로 첫 번째 극 선택
       percentage = 0;
     } else if (score1 >= score2) {
       dominantPole = pole1;
@@ -85,7 +80,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
   results.mokaType = mokaChars.join('');
   results.combinedType = `${results.mbtiType}-${results.mokaType}`;
 
-  // 각 지표에 대한 설명 생성 (제가 멋지게 만들어서 설명합니다!)
+  // 각 지표에 대한 설명 생성
   results.descriptions.EI = results.percentages.EI.pole === 'E'
     ? "당신은 **외향적인(E)** 사람으로, 에너지를 외부 활동과 사람들과의 교류에서 얻습니다. 활기찬 분위기를 선호하며, 새로운 사람들과 쉽게 어울리고 자신의 생각을 적극적으로 표현하는 데 능숙합니다. 넓고 다양한 경험을 통해 성장하고 싶어 합니다."
     : "당신은 **내향적인(I)** 사람으로, 에너지를 내면의 성찰과 조용한 활동에서 얻습니다. 깊이 있는 사고를 즐기며, 소수의 사람들과 의미 있는 관계를 맺는 것을 선호합니다. 혼자만의 시간을 통해 재충전하고 아이디어를 발전시키는 데 강점을 보입니다.";
@@ -140,13 +135,14 @@ export default function ResultsPage() {
 
   // isClient가 true일 때만 searchParams를 사용하여 데이터를 로드합니다.
   useEffect(() => {
-    if (!isClient) {
-      return; // 클라이언트 환경이 아니면 실행하지 않음
+    // isClient가 false이거나, searchParams가 아직 준비되지 않았다면 (SSR 시 null) 함수를 종료합니다.
+    if (!isClient || !searchParams) {
+      return;
     }
 
     const scoresParam = searchParams.get('scores');
 
-    if (scoresParam && scoresParam.length > 0) { // scoresParam이 존재하고 비어있지 않은 문자열인지 확인
+    if (scoresParam && scoresParam.length > 0) {
       try {
         const decodedScores = decodeURIComponent(scoresParam);
         const parsedScores = JSON.parse(decodedScores);
@@ -245,7 +241,7 @@ export default function ResultsPage() {
       )}
 
       {/* 홈으로 돌아가기 버튼 */}
-      <button className={styles.homeButton} onClick={goToHome}> {/* 홈 버튼 스타일 및 클릭 이벤트 적용 */}
+      <button className={styles.homeButton} onClick={goToHome}>
         처음으로 돌아가기
       </button>
     </div>
