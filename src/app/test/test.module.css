@@ -1,0 +1,136 @@
+/* src/app/test/test.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f0f2f5;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  text-align: center;
+}
+
+.questionCounter {
+  font-size: 1.5em;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.questionBox {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 40px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.englishText {
+  font-size: 1em;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.koreanText {
+  font-size: 1.6em;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.5;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column; /* 버튼을 세로로 정렬 */
+  justify-content: center;
+  gap: 15px; /* 버튼 간 간격 */
+  width: 100%;
+  max-width: 400px; /* 버튼 컨테이너의 최대 너비를 줄여서 버튼이 너무 넓어지지 않도록 조정 */
+}
+
+.testButton {
+  width: 100%; /* 버튼이 컨테이너 너비를 꽉 채우도록 */
+  min-width: unset; /* 최소 너비 제한 해제 */
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.testButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.testButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 7점 척도 버튼 색상 */
+.buttonColor7 { background-color: #4CAF50; } /* Green */
+.buttonColor6 { background-color: #8BC34A; } /* Light Green */
+.buttonColor5 { background-color: #CDDC39; } /* Lime */
+.buttonColor4 { background-color: #FFEB3B; } /* Yellow */
+.buttonColor3 { background-color: #FFC107; } /* Amber */
+.buttonColor2 { background-color: #FF9800; } /* Orange */
+.buttonColor1 { background-color: #F44336; } /* Red */
+
+.homeButton {
+  padding: 12px 25px;
+  background-color: #607D8B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 30px;
+  transition: background-color 0.3s ease;
+}
+
+.homeButton:hover {
+  background-color: #455A64;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .questionBox {
+    padding: 25px;
+  }
+  .koreanText {
+    font-size: 1.4em;
+  }
+  .testButton {
+    padding: 12px 15px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .questionCounter {
+    font-size: 1.2em;
+  }
+  .questionBox {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  .koreanText {
+    font-size: 1.2em;
+  }
+  .testButton {
+    padding: 10px 12px;
+    font-size: 0.9em;
+  }
+  .buttonContainer {
+    gap: 10px;
+  }
+}
