@@ -14,19 +14,6 @@ import styles from './results.module.css'; // 현재 폴더의 CSS 모듈 임포
 // 여기서는 mokaData.ts에서 가져온다고 가정합니다.
 // import { MokaQuestion } from '../../data/mokaData'; // 필요시 임포트
 
-// 각 차원의 두 극과 해당 극의 설명을 정의합니다.
-// 'H'와 'M' 대신 'M'과 'B'를 사용합니다.
-const dichotomies = [
-    { name: 'EI', poles: ['E', 'I'], type: 'MBTI' },
-    { name: 'SN', poles: ['S', 'N'], type: 'MBTI' },
-    { name: 'TF', poles: ['T', 'F'], type: 'MBTI' },
-    { name: 'JP', poles: ['J', 'P'], type: 'MBTI' },
-    { name: 'MB', poles: ['M', 'B'], type: 'MOKA' }, // H/M -> M/B
-    { name: 'OU', poles: ['O', 'U'], type: 'MOKA' },
-    { name: 'KR', poles: ['K', 'R'], type: 'MOKA' },
-    { name: 'AY', poles: ['A', 'Y'], type: 'MOKA' },
-];
-
 // MOKA 테스트 결과 계산 및 유형 판별 함수
 // 이 함수는 test/page.tsx에서 넘겨받은 각 극의 총점(scores)을 기반으로
 // 최종 MBTI 4가지 지표와 MOKA 4가지 지표의 최종 유형 및 각 지표별 선호도 퍼센티지(선호도 강도)를 계산합니다.
@@ -44,6 +31,19 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
     percentages: {},
     descriptions: {},
   };
+
+  // 각 차원의 두 극과 해당 극의 설명을 정의합니다.
+  // 'H'와 'M' 대신 'M'과 'B'를 사용합니다.
+  const dichotomies = [
+    { name: 'EI', poles: ['E', 'I'], type: 'MBTI' },
+    { name: 'SN', poles: ['S', 'N'], type: 'MBTI' },
+    { name: 'TF', poles: ['T', 'F'], type: 'MBTI' },
+    { name: 'JP', poles: ['J', 'P'], type: 'MBTI' },
+    { name: 'MB', poles: ['M', 'B'], type: 'MOKA' }, // H/M -> M/B
+    { name: 'OU', poles: ['O', 'U'], type: 'MOKA' },
+    { name: 'KR', poles: ['K', 'R'], type: 'MOKA' },
+    { name: 'AY', poles: ['A', 'Y'], type: 'MOKA' },
+  ];
 
   // 'let' 대신 'const'를 사용하여 ESLint 오류 해결
   const mbtiChars: string[] = [];
@@ -208,26 +208,42 @@ export default function ResultsPage() {
         <h1 className={styles.finalType}>{mokaResults.combinedType}</h1>
       )}
 
+      {/* 3. 그 아래에 하늘색 박스를 만들어 % 수치 표기 */}
+      {mokaResults && (
+        <div className={styles.percentageBox}>
+          {/* 윗줄: MBTI 퍼센티지 */}
+          <p className={styles.percentageLine}>
+            {mokaResults.percentages.EI.pole}{mokaResults.percentages.EI.percentage}%{' '}
+            {mokaResults.percentages.SN.pole}{mokaResults.percentages.SN.percentage}%{' '}
+            {mokaResults.percentages.TF.pole}{mokaResults.percentages.TF.percentage}%{' '}
+            {mokaResults.percentages.JP.pole}{mokaResults.percentages.JP.percentage}%
+          </p>
+          {/* 아랫줄: MOKA 퍼센티지 */}
+          <p className={styles.percentageLine}>
+            {mokaResults.percentages.MB.pole}{mokaResults.percentages.MB.percentage}%{' '}
+            {mokaResults.percentages.OU.pole}{mokaResults.percentages.OU.percentage}%{' '}
+            {mokaResults.percentages.KR.pole}{mokaResults.percentages.KR.percentage}%{' '}
+            {mokaResults.percentages.AY.pole}{mokaResults.percentages.AY.percentage}%
+          </p>
+        </div>
+      )}
+
       {/* 4. 내가 받은 8개 유형의 평가에 대한 간단한 설명 */}
       {mokaResults && (
         <div className={styles.descriptionContainer}>
-          {dichotomies.map(dichotomy => ( // Iterate over the dichotomies array
-            <div key={dichotomy.name} className={styles.descriptionItem}>
+          {Object.entries(mokaResults.descriptions).map(([dichotomy, description]) => (
+            <div key={dichotomy} className={styles.descriptionItem}>
               <h3 className={styles.descriptionTitle}>
-                {dichotomy.name === 'EI' && '에너지의 방향 (외향/내향)'}
-                {dichotomy.name === 'SN' && '정보 인식 방식 (감각/직관)'}
-                {dichotomy.name === 'TF' && '의사결정 방식 (사고/감정)'}
-                {dichotomy.name === 'JP' && '생활 양식 (판단/인식)'}
-                {dichotomy.name === 'MB' && '관계 및 리더십 스타일 (주도/협력)'}
-                {dichotomy.name === 'OU' && '유머 및 자기 비판 (개방/신중)'}
-                {dichotomy.name === 'KR' && '감정 표현 방식 (표현/절제)'}
-                {dichotomy.name === 'AY' && '자기 인식 및 매력 (자신감/불안)'}
+                {dichotomy === 'EI' && '에너지의 방향 (외향/내향)'}
+                {dichotomy === 'SN' && '정보 인식 방식 (감각/직관)'}
+                {dichotomy === 'TF' && '의사결정 방식 (사고/감정)'}
+                {dichotomy === 'JP' && '생활 양식 (판단/인식)'}
+                {dichotomy === 'MB' && '관계 및 리더십 스타일 (주도/협력)'}
+                {dichotomy === 'OU' && '유머 및 자기 비판 (개방/신중)'}
+                {dichotomy === 'KR' && '감정 표현 방식 (표현/절제)'}
+                {dichotomy === 'AY' && '자기 인식 및 매력 (자신감/불안)'}
               </h3>
-              {/* Display the pole and its percentage */}
-              <p className={styles.percentageLine}>
-                <strong>{mokaResults.percentages[dichotomy.name].pole}</strong> {mokaResults.percentages[dichotomy.name].percentage}%
-              </p>
-              <p className={styles.descriptionText} dangerouslySetInnerHTML={{ __html: mokaResults.descriptions[dichotomy.name] }}></p>
+              <p className={styles.descriptionText} dangerouslySetInnerHTML={{ __html: description }}></p>
             </div>
           ))}
         </div>
