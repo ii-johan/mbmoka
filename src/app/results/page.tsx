@@ -4,13 +4,18 @@
 
 // 이 페이지는 URL 쿼리 파라미터에 의존하므로, 빌드 시점에 미리 렌더링하지 않고
 // 요청이 들어올 때마다 서버에서 동적으로 렌더링하도록 강제합니다.
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'; // <-- 이 줄을 추가했습니다.
 
 import React, { useEffect, useState, useCallback } from 'react'; // 필요한 훅 임포트
 import { useSearchParams, useRouter } from 'next/navigation'; // App Router 훅 임포트 (URL 파라미터 읽기, 페이지 이동)
 import styles from './results.module.css'; // 현재 폴더의 CSS 모듈 임포트
 
-// 각 차원의 두 극과 해당 극의 설명을 정의합니다. (calculateMokaResults 함수 밖으로 이동)
+// MokaQuestion 타입 정의 (mokaData.ts에서 임포트하거나 여기에 직접 정의해야 할 수 있습니다.)
+// 여기서는 mokaData.ts에서 가져온다고 가정합니다.
+// import { MokaQuestion } from '../../data/mokaData'; // 필요시 임포트
+
+// 각 차원의 두 극과 해당 극의 설명을 정의합니다.
+// 'H'와 'M' 대신 'M'과 'B'를 사용합니다.
 const dichotomies = [
     { name: 'EI', poles: ['E', 'I'], type: 'MBTI' },
     { name: 'SN', poles: ['S', 'N'], type: 'MBTI' },
@@ -40,6 +45,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
     descriptions: {},
   };
 
+  // 'let' 대신 'const'를 사용하여 ESLint 오류 해결
   const mbtiChars: string[] = [];
   const mokaChars: string[] = [];
 
@@ -54,7 +60,8 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
     const totalScore = score1 + score2;
 
     if (totalScore === 0) {
-      dominantPole = pole1; // 점수가 0인 경우 기본값으로 첫 번째 극 선택
+      // 두 극 모두 점수가 0인 경우 (해당 문항이 없거나 답변이 없는 경우)
+      dominantPole = pole1; // 기본값으로 첫 번째 극 선택
       percentage = 0;
     } else if (score1 >= score2) {
       dominantPole = pole1;
@@ -80,7 +87,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
   results.mokaType = mokaChars.join('');
   results.combinedType = `${results.mbtiType}-${results.mokaType}`;
 
-  // 각 지표에 대한 설명 생성
+  // 각 지표에 대한 설명 생성 (제가 멋지게 만들어서 설명합니다!)
   results.descriptions.EI = results.percentages.EI.pole === 'E'
     ? "당신은 **외향적인(E)** 사람으로, 에너지를 외부 활동과 사람들과의 교류에서 얻습니다. 활기찬 분위기를 선호하며, 새로운 사람들과 쉽게 어울리고 자신의 생각을 적극적으로 표현하는 데 능숙합니다. 넓고 다양한 경험을 통해 성장하고 싶어 합니다."
     : "당신은 **내향적인(I)** 사람으로, 에너지를 내면의 성찰과 조용한 활동에서 얻습니다. 깊이 있는 사고를 즐기며, 소수의 사람들과 의미 있는 관계를 맺는 것을 선호합니다. 혼자만의 시간을 통해 재충전하고 아이디어를 발전시키는 데 강점을 보입니다.";
@@ -111,7 +118,7 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
 
   results.descriptions.AY = results.percentages.AY.pole === 'A'
     ? "당신은 **자신감형(A)** 사람으로, 자신의 외모, 성격, 이미지에 전반적으로 만족하며 당당하고 매력적인 태도를 가집니다. 사회적 상황에서 긴장하지 않고 자신감 있게 행동하며, 타인의 관심을 즐기고 트렌드에 민감합니다. 주변 분위기를 변화시키는 존재감을 가집니다."
-    : "당신은 **불안형(Y)** 사람으로, 자신의 외모나 이미지에 대해 다소 불안감을 느끼거나 만족도가 낮을 수 있습니다. 주목받는 것을 어색해하며, 스스로를 매력적으로 포장하는 데 익숙하지 않습니다. 때로는 주변 사람들과 비교하며 위축되거나, 시대에 뒤처지는 느낌을 받을 수.";
+    : "당신은 **불안형(Y)** 사람으로, 자신의 외모나 이미지에 대해 다소 불안감을 느끼거나 만족도가 낮을 수 있습니다. 주목받는 것을 어색해하며, 스스로를 매력적으로 포장하는 데 익숙하지 않습니다. 때로는 주변 사람들과 비교하며 위축되거나, 시대에 뒤처지는 느낌을 받을 수 있습니다.";
 
   return results;
 };
@@ -119,57 +126,55 @@ const calculateMokaResults = (rawScores: { [pole: string]: number }) => {
 
 // 결과 페이지 컴포넌트 정의
 export default function ResultsPage() {
-  // isClient 상태를 추가하여 클라이언트 환경에서만 특정 로직이 실행되도록 합니다.
-  const [isClient, setIsClient] = useState(false);
+  // URL에서 쿼리 파라미터(예: ?scores=...)를 읽어오기 위한 훅
   const searchParams = useSearchParams();
+  // 페이지 이동을 위한 훅
   const router = useRouter();
 
+  // 상태 변수 선언
   const [mokaResults, setMokaResults] = useState<ReturnType<typeof calculateMokaResults> | null>(null);
+  // 데이터 로딩 상태
   const [loading, setLoading] = useState(true);
+  // 오류 메시지 상태
   const [error, setError] = useState<string | null>(null);
 
-  // 컴포넌트가 마운트될 때 isClient를 true로 설정하여 클라이언트 환경임을 나타냅니다.
+  // 컴포넌트가 처음 화면에 표시될 때(마운트) 실행됩니다.
+  // URL 쿼리 파라미터에서 'scores' 값을 읽어와 점수 상태를 업데이트합니다.
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    const scoresParam = searchParams.get('scores'); // URL에서 'scores' 라는 이름의 파라미터 값을 가져옴
 
-  // isClient가 true일 때만 searchParams를 사용하여 데이터를 로드합니다.
-  useEffect(() => {
-    // isClient가 false이거나, searchParams가 아직 준비되지 않았다면 (SSR 시 null) 함수를 종료합니다.
-    if (!isClient || !searchParams) {
-      return;
-    }
-
-    const scoresParam = searchParams.get('scores');
-
-    if (scoresParam && scoresParam.length > 0) {
+    if (scoresParam) {
       try {
-        const decodedScores = decodeURIComponent(scoresParam);
-        const parsedScores = JSON.parse(decodedScores);
-        const calculatedResults = calculateMokaResults(parsedScores);
-        setMokaResults(calculatedResults);
-        setLoading(false);
+        // 가져온 파라미터 값(JSON 문자열)을 JavaScript 객체로 변환(파싱)
+        const parsedScores = JSON.parse(decodeURIComponent(scoresParam)); // decodeURIComponent 추가
+        const calculatedResults = calculateMokaResults(parsedScores); // 점수 계산 함수 호출
+        setMokaResults(calculatedResults); // 계산된 결과 객체를 상태에 저장
+        setLoading(false); // 로딩 상태를 false로 변경
       } catch (e) {
-        console.error("Failed to parse or calculate scores from URL:", e);
-        setError("결과 데이터를 불러오거나 계산하는 데 실패했습니다. 데이터 형식이 올바르지 않습니다.");
-        setLoading(false);
+        console.error("Failed to parse or calculate scores from URL:", e); // 파싱 오류 발생 시 콘솔에 로그
+        setError("결과 데이터를 불러오거나 계산하는 데 실패했습니다. 데이터 형식이 올바르지 않습니다."); // 사용자에게 보여줄 오류 메시지 설정
+        setLoading(false); // 로딩 상태를 false로 변경 (오류 발생 시에도 로딩은 끝남)
       }
     } else {
-      setError("테스트 결과 데이터가 없습니다. 테스트를 다시 시도해주세요.");
-      setLoading(false);
+      // 'scores' 파라미터가 URL에 없는 경우
+      setError("결과 데이터가 URL에 없습니다. 테스트를 다시 시도해주세요."); // 데이터가 없다는 오류 메시지 설정
+      setLoading(false); // 로딩 상태를 false로 변경
     }
-  }, [isClient, searchParams, router]); // isClient, searchParams, router를 의존성 배열에 포함
+  }, [searchParams]); // searchParams 객체가 변경될 때마다 이 useEffect 훅 안의 코드를 다시 실행
 
+  // 홈 페이지('/')로 이동하는 함수
   const goToHome = useCallback(() => {
-    router.push('/');
+    router.push('/'); // Next.js 라우터를 사용하여 루트 경로('/')로 이동
   }, [router]);
 
 
+  // ***** 로딩 중 UI 표시 *****
   if (loading) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
         <h1>결과 로딩 중...</h1>
         <p>잠시만 기다려 주세요.</p>
+        {/* 로딩 중에도 홈 버튼을 표시하여 사용자가 페이지를 벗어날 수 있게 함 */}
         <button className={styles.homeButton} onClick={goToHome}>
             처음으로 돌아가기
         </button>
@@ -177,11 +182,13 @@ export default function ResultsPage() {
     );
   }
 
+  // ***** 오류 발생 시 UI 표시 *****
   if (error) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
         <h1>오류 발생</h1>
-        <p>{error}</p>
+        <p>{error}</p> {/* 오류 메시지 표시 */}
+        {/* 오류 발생 시에도 홈 버튼 제공 */}
         <button className={styles.homeButton} onClick={goToHome}>
           처음으로 돌아가기
         </button>
@@ -189,8 +196,10 @@ export default function ResultsPage() {
     );
   }
 
+  // ***** 결과 표시 UI (점수 데이터가 성공적으로 로드된 경우) *****
+  // mokaResults 상태가 null이 아니고 오류도 없을 때 이 부분이 렌더링됩니다.
   return (
-    <div className={styles.container}>
+    <div className={styles.container}> {/* 결과 페이지 디자인 CSS의 container 클래스 사용 */}
       {/* 1. 제일 위쪽에 검은색 중간크기 글씨로 "My MBTI-MOKA Type?" */}
       <h2 className={styles.subtitle}>My MBTI-MOKA Type?</h2>
 
@@ -199,49 +208,33 @@ export default function ResultsPage() {
         <h1 className={styles.finalType}>{mokaResults.combinedType}</h1>
       )}
 
-      {/* 3. 그 아래에 하늘색 박스를 만들어 % 수치 표기 */}
-      {mokaResults && (
-        <div className={styles.percentageBox}>
-          {/* 윗줄: MBTI 퍼센티지 */}
-          <p className={styles.percentageLine}>
-            {mokaResults.percentages.EI.pole}{mokaResults.percentages.EI.percentage}%{' '}
-            {mokaResults.percentages.SN.pole}{mokaResults.percentages.SN.percentage}%{' '}
-            {mokaResults.percentages.TF.pole}{mokaResults.percentages.TF.percentage}%{' '}
-            {mokaResults.percentages.JP.pole}{mokaResults.percentages.JP.percentage}%
-          </p>
-          {/* 아랫줄: MOKA 퍼센티지 */}
-          <p className={styles.percentageLine}>
-            {mokaResults.percentages.MB.pole}{mokaResults.percentages.MB.percentage}%{' '}
-            {mokaResults.percentages.OU.pole}{mokaResults.percentages.OU.percentage}%{' '}
-            {mokaResults.percentages.KR.pole}{mokaResults.percentages.KR.percentage}%{' '}
-            {mokaResults.percentages.AY.pole}{mokaResults.percentages.AY.percentage}%
-          </p>
-        </div>
-      )}
-
       {/* 4. 내가 받은 8개 유형의 평가에 대한 간단한 설명 */}
       {mokaResults && (
         <div className={styles.descriptionContainer}>
-          {Object.entries(mokaResults.descriptions).map(([dichotomy, description]) => (
-            <div key={dichotomy} className={styles.descriptionItem}>
+          {dichotomies.map(dichotomy => ( // Iterate over the dichotomies array
+            <div key={dichotomy.name} className={styles.descriptionItem}>
               <h3 className={styles.descriptionTitle}>
-                {dichotomy === 'EI' && '에너지의 방향 (외향/내향)'}
-                {dichotomy === 'SN' && '정보 인식 방식 (감각/직관)'}
-                {dichotomy === 'TF' && '의사결정 방식 (사고/감정)'}
-                {dichotomy === 'JP' && '생활 양식 (판단/인식)'}
-                {dichotomy === 'MB' && '관계 및 리더십 스타일 (주도/협력)'}
-                {dichotomy === 'OU' && '유머 및 자기 비판 (개방/신중)'}
-                {dichotomy === 'KR' && '감정 표현 방식 (표현/절제)'}
-                {dichotomy === 'AY' && '자기 인식 및 매력 (자신감/불안)'}
+                {dichotomy.name === 'EI' && '에너지의 방향 (외향/내향)'}
+                {dichotomy.name === 'SN' && '정보 인식 방식 (감각/직관)'}
+                {dichotomy.name === 'TF' && '의사결정 방식 (사고/감정)'}
+                {dichotomy.name === 'JP' && '생활 양식 (판단/인식)'}
+                {dichotomy.name === 'MB' && '관계 및 리더십 스타일 (주도/협력)'}
+                {dichotomy.name === 'OU' && '유머 및 자기 비판 (개방/신중)'}
+                {dichotomy.name === 'KR' && '감정 표현 방식 (표현/절제)'}
+                {dichotomy.name === 'AY' && '자기 인식 및 매력 (자신감/불안)'}
               </h3>
-              <p className={styles.descriptionText} dangerouslySetInnerHTML={{ __html: description }}></p>
+              {/* Display the pole and its percentage */}
+              <p className={styles.percentageLine}>
+                <strong>{mokaResults.percentages[dichotomy.name].pole}</strong> {mokaResults.percentages[dichotomy.name].percentage}%
+              </p>
+              <p className={styles.descriptionText} dangerouslySetInnerHTML={{ __html: mokaResults.descriptions[dichotomy.name] }}></p>
             </div>
           ))}
         </div>
       )}
 
       {/* 홈으로 돌아가기 버튼 */}
-      <button className={styles.homeButton} onClick={goToHome}>
+      <button className={styles.homeButton} onClick={goToHome}> {/* 홈 버튼 스타일 및 클릭 이벤트 적용 */}
         처음으로 돌아가기
       </button>
     </div>
